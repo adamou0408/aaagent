@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import { z } from "zod";
 import { TaskService } from "../services/task.service";
 import { TaskStatus } from "../entities/task.entity";
+import { asyncHandler } from "../utils/async-handler";
 
 const createTaskSchema = z.object({
   title: z.string().min(1).max(255),
@@ -63,7 +64,7 @@ export function createTaskRouter(): Router {
    *       200:
    *         description: List of tasks
    */
-  router.get("/", async (req: Request, res: Response) => {
+  router.get("/", asyncHandler(async (req: Request, res: Response) => {
     const { status } = req.query;
     if (status && Object.values(TaskStatus).includes(status as TaskStatus)) {
       const tasks = await service.getTasksByStatus(status as TaskStatus);
@@ -72,7 +73,7 @@ export function createTaskRouter(): Router {
     }
     const tasks = await service.getAllTasks();
     res.json({ data: tasks });
-  });
+  }));
 
   /**
    * @swagger
@@ -92,7 +93,7 @@ export function createTaskRouter(): Router {
    *       404:
    *         description: Task not found
    */
-  router.get("/:id", async (req: Request, res: Response) => {
+  router.get("/:id", asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const task = await service.getTaskById(id);
     if (!task) {
@@ -100,7 +101,7 @@ export function createTaskRouter(): Router {
       return;
     }
     res.json({ data: task });
-  });
+  }));
 
   /**
    * @swagger
@@ -125,7 +126,7 @@ export function createTaskRouter(): Router {
    *       201:
    *         description: Task created
    */
-  router.post("/", async (req: Request, res: Response) => {
+  router.post("/", asyncHandler(async (req: Request, res: Response) => {
     const parsed = createTaskSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.flatten() });
@@ -133,7 +134,7 @@ export function createTaskRouter(): Router {
     }
     const task = await service.createTask(parsed.data);
     res.status(201).json({ data: task });
-  });
+  }));
 
   /**
    * @swagger
@@ -168,7 +169,7 @@ export function createTaskRouter(): Router {
    *       404:
    *         description: Task not found
    */
-  router.patch("/:id", async (req: Request, res: Response) => {
+  router.patch("/:id", asyncHandler(async (req: Request, res: Response) => {
     const parsed = updateTaskSchema.safeParse(req.body);
     if (!parsed.success) {
       res.status(400).json({ error: parsed.error.flatten() });
@@ -181,7 +182,7 @@ export function createTaskRouter(): Router {
       return;
     }
     res.json({ data: task });
-  });
+  }));
 
   /**
    * @swagger
@@ -201,7 +202,7 @@ export function createTaskRouter(): Router {
    *       404:
    *         description: Task not found
    */
-  router.delete("/:id", async (req: Request, res: Response) => {
+  router.delete("/:id", asyncHandler(async (req: Request, res: Response) => {
     const id = req.params.id as string;
     const deleted = await service.deleteTask(id);
     if (!deleted) {
@@ -209,7 +210,7 @@ export function createTaskRouter(): Router {
       return;
     }
     res.status(204).send();
-  });
+  }));
 
   return router;
 }

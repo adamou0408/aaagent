@@ -5,6 +5,7 @@ import swaggerUi from "swagger-ui-express";
 
 import { env } from "./config/env";
 import { swaggerSpec } from "./config/swagger";
+import { requestId } from "./middlewares/request-id";
 import { requestLogger } from "./middlewares/request-logger";
 import { errorHandler } from "./middlewares/error-handler";
 import { createTaskRouter } from "./controllers/task.controller";
@@ -16,6 +17,7 @@ export function createApp() {
   app.use(helmet());
   app.use(cors({ origin: env.CORS_ORIGIN }));
   app.use(express.json());
+  app.use(requestId);
   app.use(requestLogger);
 
   // Health check (outside /api/v1 for load balancer probes)
