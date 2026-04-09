@@ -18,8 +18,8 @@ export interface UpdateTaskDto {
 export class TaskService {
   private taskRepo: TaskRepository;
 
-  constructor() {
-    this.taskRepo = new TaskRepository();
+  constructor(taskRepo?: TaskRepository) {
+    this.taskRepo = taskRepo ?? new TaskRepository();
   }
 
   async getAllTasks(): Promise<Task[]> {

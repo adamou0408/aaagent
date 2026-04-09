@@ -93,7 +93,8 @@ export function createTaskRouter(): Router {
    *         description: Task not found
    */
   router.get("/:id", async (req: Request, res: Response) => {
-    const task = await service.getTaskById(req.params.id);
+    const id = req.params.id as string;
+    const task = await service.getTaskById(id);
     if (!task) {
       res.status(404).json({ error: "Task not found" });
       return;
@@ -173,7 +174,8 @@ export function createTaskRouter(): Router {
       res.status(400).json({ error: parsed.error.flatten() });
       return;
     }
-    const task = await service.updateTask(req.params.id, parsed.data);
+    const id = req.params.id as string;
+    const task = await service.updateTask(id, parsed.data);
     if (!task) {
       res.status(404).json({ error: "Task not found" });
       return;
@@ -200,7 +202,8 @@ export function createTaskRouter(): Router {
    *         description: Task not found
    */
   router.delete("/:id", async (req: Request, res: Response) => {
-    const deleted = await service.deleteTask(req.params.id);
+    const id = req.params.id as string;
+    const deleted = await service.deleteTask(id);
     if (!deleted) {
       res.status(404).json({ error: "Task not found" });
       return;

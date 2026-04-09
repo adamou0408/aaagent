@@ -1,42 +1,11 @@
 import "reflect-metadata";
-import express from "express";
-import cors from "cors";
-import helmet from "helmet";
-import swaggerUi from "swagger-ui-express";
 
 import { env } from "./config/env";
 import { logger } from "./config/logger";
 import { AppDataSource } from "./config/data-source";
-import { swaggerSpec } from "./config/swagger";
-import { requestLogger } from "./middlewares/request-logger";
-import { errorHandler } from "./middlewares/error-handler";
-import { createTaskRouter } from "./controllers/task.controller";
+import { createApp } from "./app";
 
-const app = express();
-
-// Global middleware
-app.use(helmet());
-app.use(cors({ origin: env.CORS_ORIGIN }));
-app.use(express.json());
-app.use(requestLogger);
-
-// Health check (outside /api/v1 for load balancer probes)
-app.get("/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString(),
-  });
-});
-
-// API docs
-app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// API routes
-app.use("/api/v1/tasks", createTaskRouter());
-
-// Error handler (must be last)
-app.use(errorHandler);
+const app = createApp();
 
 // Start server
 async function bootstrap() {
@@ -52,10 +21,37 @@ async function bootstrap() {
     });
   }
 
-  app.listen(env.PORT, () => {
+  const server = app.listen(env.PORT, () => {
     logger.info(`Server running on port ${env.PORT}`);
     logger.info(`API docs available at http://localhost:${env.PORT}/docs`);
   });
+
+  // Graceful shutdown
+  const shutdown = async (signal: string) => {
+    logger.info(`Received ${signal}, shutting down gracefully...`);
+    server.close(async () => {
+      try {
+        if (AppDataSource.isInitialized) {
+          await AppDataSource.destroy();
+          logger.info("Database connection closed");
+        }
+      } catch (err) {
+        logger.error("Error during shutdown", {
+          error: (err as Error).message,
+        });
+      }
+      process.exit(0);
+    });
+
+    // Force shutdown after 10s if graceful shutdown hangs
+    setTimeout(() => {
+      logger.error("Forced shutdown after timeout");
+      process.exit(1);
+    }, 10_000);
+  };
+
+  process.on("SIGTERM", () => shutdown("SIGTERM"));
+  process.on("SIGINT", () => shutdown("SIGINT"));
 }
 
 bootstrap();
