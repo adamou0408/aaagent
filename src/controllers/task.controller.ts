@@ -3,6 +3,7 @@ import { z } from "zod";
 import { TaskService } from "../services/task.service";
 import { TaskStatus } from "../entities/task.entity";
 import { asyncHandler } from "../utils/async-handler";
+import { paginationSchema } from "../utils/pagination";
 
 const createTaskSchema = z.object({
   title: z.string().min(1).max(255),
@@ -71,8 +72,9 @@ export function createTaskRouter(): Router {
       res.json({ data: tasks });
       return;
     }
-    const tasks = await service.getAllTasks();
-    res.json({ data: tasks });
+    const params = paginationSchema.parse(req.query);
+    const result = await service.getAllTasks(params);
+    res.json(result);
   }));
 
   /**

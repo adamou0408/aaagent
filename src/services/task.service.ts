@@ -1,11 +1,13 @@
 import { Task, TaskStatus } from "../entities/task.entity";
 import { TaskRepository } from "../repositories/task.repository";
+import { PaginationParams, PaginatedResponse, createPaginatedResponse } from "../utils/pagination";
 import { logger } from "../config/logger";
 
 export interface CreateTaskDto {
   title: string;
   description?: string;
   priority?: number;
+  projectId?: string;
 }
 
 export interface UpdateTaskDto {
@@ -13,6 +15,7 @@ export interface UpdateTaskDto {
   description?: string;
   status?: TaskStatus;
   priority?: number;
+  projectId?: string | null;
 }
 
 export class TaskService {
@@ -22,8 +25,10 @@ export class TaskService {
     this.taskRepo = taskRepo ?? new TaskRepository();
   }
 
-  async getAllTasks(): Promise<Task[]> {
-    return this.taskRepo.findAll();
+  async getAllTasks(params?: PaginationParams): Promise<PaginatedResponse<Task>> {
+    const [data, total] = await this.taskRepo.findAll(params);
+    const p = params ?? { page: 1, limit: total || 1, sort: "createdAt", order: "DESC" as const };
+    return createPaginatedResponse(data, total, p);
   }
 
   async getTaskById(id: string): Promise<Task | null> {

@@ -42,22 +42,24 @@ describe("TaskService", () => {
   });
 
   describe("getAllTasks", () => {
-    it("should return all tasks from repository", async () => {
+    it("should return paginated tasks from repository", async () => {
       const tasks = [createMockTask(), createMockTask({ id: "id-2", title: "Second" })];
-      mockRepo.findAll.mockResolvedValue(tasks);
+      mockRepo.findAll.mockResolvedValue([tasks, 2]);
 
       const result = await service.getAllTasks();
 
-      expect(result).toEqual(tasks);
+      expect(result.data).toEqual(tasks);
+      expect(result.meta.total).toBe(2);
       expect(mockRepo.findAll).toHaveBeenCalledTimes(1);
     });
 
-    it("should return empty array when no tasks exist", async () => {
-      mockRepo.findAll.mockResolvedValue([]);
+    it("should return empty data when no tasks exist", async () => {
+      mockRepo.findAll.mockResolvedValue([[], 0]);
 
       const result = await service.getAllTasks();
 
-      expect(result).toEqual([]);
+      expect(result.data).toEqual([]);
+      expect(result.meta.total).toBe(0);
     });
   });
 

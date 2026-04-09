@@ -28,3 +28,6 @@ logs/
 
 # TypeORM
 ormlogs.log
+
+# Database backups
+backups/

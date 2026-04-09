@@ -1,4 +1,4 @@
-.PHONY: help dev build start test lint format docker-up docker-down db-migrate clean
+.PHONY: help dev build start test lint format docker-up docker-down db-migrate db-seed db-backup db-restore clean
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | \
@@ -40,11 +40,23 @@ docker-down: ## Stop all services
 docker-logs: ## Tail service logs
 	docker compose logs -f
 
+docker-staging: ## Start staging environment
+	docker compose -f docker-compose.staging.yml up -d --build
+
 db-migrate: ## Run database migrations
 	npm run migration:run
 
 db-migrate-revert: ## Revert last migration
 	npm run migration:revert
+
+db-seed: ## Seed database with sample data
+	npx ts-node src/seeds/index.ts
+
+db-backup: ## Backup database
+	./scripts/db-backup.sh
+
+db-restore: ## Restore database from backup
+	@echo "Usage: ./scripts/db-restore.sh <backup_file.sql.gz>"
 
 clean: ## Remove build artifacts
 	rm -rf dist coverage

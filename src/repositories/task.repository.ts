@@ -1,6 +1,7 @@
 import { Repository } from "typeorm";
 import { AppDataSource } from "../config/data-source";
 import { Task, TaskStatus } from "../entities/task.entity";
+import { PaginationParams, buildPaginationOptions } from "../utils/pagination";
 
 export class TaskRepository {
   private repo: Repository<Task>;
@@ -9,8 +10,21 @@ export class TaskRepository {
     this.repo = AppDataSource.getRepository(Task);
   }
 
-  findAll(): Promise<Task[]> {
-    return this.repo.find({ order: { priority: "DESC", createdAt: "DESC" } });
+  async findAll(params?: PaginationParams): Promise<[Task[], number]> {
+    if (params) {
+      const options = buildPaginationOptions(params, [
+        "createdAt",
+        "updatedAt",
+        "priority",
+        "title",
+        "status",
+      ]);
+      return this.repo.findAndCount(options);
+    }
+    const tasks = await this.repo.find({
+      order: { priority: "DESC", createdAt: "DESC" },
+    });
+    return [tasks, tasks.length];
   }
 
   findById(id: string): Promise<Task | null> {
@@ -35,7 +49,7 @@ export class TaskRepository {
   }
 
   async delete(id: string): Promise<boolean> {
-    const result = await this.repo.delete(id);
+    const result = await this.repo.softDelete(id);
     return (result.affected ?? 0) > 0;
   }
 }

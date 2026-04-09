@@ -13,4 +13,9 @@ export const AppDataSource = new DataSource({
   logging: env.NODE_ENV === "development",
   entities: [__dirname + "/../entities/*.{ts,js}"],
   migrations: [__dirname + "/../migrations/*.{ts,js}"],
+  extra: {
+    max: env.DB_POOL_SIZE,
+    connectionTimeoutMillis: env.DB_CONNECTION_TIMEOUT,
+    idleTimeoutMillis: 30000,
+  },
 });

@@ -1,5 +1,6 @@
-import { Entity, Column } from "typeorm";
+import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
 import { BaseEntity } from "./base.entity";
+import { Project } from "./project.entity";
 
 export enum TaskStatus {
   PENDING = "pending",
@@ -20,4 +21,11 @@ export class Task extends BaseEntity {
 
   @Column({ type: "int", default: 0 })
   priority!: number;
+
+  @Column({ type: "uuid", name: "project_id", nullable: true })
+  projectId!: string | null;
+
+  @ManyToOne(() => Project, (project) => project.tasks, { onDelete: "SET NULL" })
+  @JoinColumn({ name: "project_id" })
+  project!: Project | null;
 }

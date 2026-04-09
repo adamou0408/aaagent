@@ -9,7 +9,16 @@ const config: Config = {
     "src/**/*.ts",
     "!src/index.ts",
     "!src/migrations/**",
+    "!src/seeds/**",
   ],
+  coverageThreshold: {
+    global: {
+      branches: 60,
+      functions: 60,
+      lines: 60,
+      statements: 60,
+    },
+  },
 };
 
 export default config;
